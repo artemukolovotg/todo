@@ -1,0 +1,23 @@
+.task {
+  position: relative;
+  cursor: pointer;
+  width: 100%;
+  vertical-align:top;
+  margin-bottom: 5px;
+  border: 1px solid grey;
+  border-radius: 5px;
+
+  &-text {
+    margin: 10px;
+  }
+
+  &__actions {
+    text-align: right;
+  }
+
+  &__actions-wrapper {
+    padding: 2px;
+    display: inline-block
+  }
+
+}
