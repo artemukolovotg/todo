@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { DragSource } from 'react-dnd';
-import { Button, Row, Col, Popover, List, Avatar, Badge } from 'antd';
+import {DragSource} from 'react-dnd';
+import {Button, Row, Col, Popover, List, Avatar, Badge} from 'antd';
 
 import TaskPlace from './TaskPlace.component';
 import {ItemTypes} from '../utils/constants'
@@ -23,7 +23,7 @@ const taskSource = {
         const dropResult = monitor.getDropResult();
         if (dropResult) {
             if (item.taskId !== dropResult.taskId) {
-                props.replaceTask(
+                props.moveTask(
                     item.columnId,
                     item.taskId,
                     dropResult.columnId,
@@ -60,10 +60,7 @@ class Task extends React.PureComponent {
     handleCommentTask = () => {
         const {taskId, commentTask} = this.props;
         data.prompt('New comment', false)
-            .then(text => commentTask(taskId, text))
-            .catch(() => {
-
-            });
+            .then(text => commentTask(taskId, text));
     };
 
     handleRenameTask = () => {

@@ -39,15 +39,16 @@ export default function (incomingState = initialState, action) {
         case SERVER_RESPONSE_COLUMN: {
             let indexColumn = state.columns.findIndex(column => column.id === action.data.column.id);
             return Object.assign({}, state, {columns: [].concat(
-                indexColumn === -1 ? [...state.columns] : [...state.columns.slice(0, indexColumn)],
-                indexColumn === -1 ? [] : action.data.column,
-                indexColumn === -1 ? [] : [...state.columns.slice(indexColumn + 1, state.columns.length)],
-                indexColumn !== -1 ? [] : action.data.column,
+                indexColumn === -1
+                    ? [...state.columns].concat(action.data.column)
+                    : [...state.columns.slice(0, indexColumn)]
+                            .concat(action.data.column)
+                            .concat([...state.columns.slice(indexColumn + 1, state.columns.length)])
             )});
         }
 
         case SERVER_RESPONSE_TASK: {
-            let indexColumn = state.columns.findIndex(column => column.id === action.data.task.column_id);
+            let indexColumn = state.columns.findIndex(column => column.id === action.data.task.columnId);
             let indexTask = state.columns[indexColumn].tasks.findIndex(task => task.id === action.data.task.id);
 
             return Object.assign({}, state, {columns: [
@@ -63,6 +64,6 @@ export default function (incomingState = initialState, action) {
         }
 
         default:
-            return state;
+            return incomingState;
     }
 }

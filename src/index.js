@@ -1,8 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { createStore, applyMiddleware} from "redux";
+import {createStore, applyMiddleware} from "redux";
 import createSocketIoMiddleware from 'redux-socket.io';
-import { Provider } from 'react-redux';
+import {Provider} from 'react-redux';
 import App from './containers/App.container';
 
 import appReducer from './redux/App.reducer';

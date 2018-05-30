@@ -1,9 +1,10 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import './styles/App.scss';
 import 'react-notifications/lib/notifications.css';
-import { DragDropContextProvider } from 'react-dnd'
+import {DragDropContextProvider} from 'react-dnd'
 import HTML5Backend from 'react-dnd-html5-backend'
-import { Button } from 'antd';
+import {Button} from 'antd';
 import {NotificationContainer} from 'react-notifications';
 
 import Column from './components/Column.component';
@@ -12,6 +13,19 @@ import Loading from './components/Loading.component';
 import data from './utils/data'
 
 class App extends React.Component {
+
+    static get propTypes() {
+        return {
+            columns: PropTypes.array.isRequired,
+            loading: PropTypes.bool.isRequired,
+            moveColumn: PropTypes.func.isRequired,
+            changeColumnName: PropTypes.func.isRequired,
+            addTask: PropTypes.func.isRequired,
+            moveTask: PropTypes.func.isRequired,
+            changeTaskName: PropTypes.func.isRequired,
+            commentTask: PropTypes.func.isRequired
+        }
+    }
 
     componentDidMount() {
         this.props.getData();
@@ -26,10 +40,10 @@ class App extends React.Component {
         const {
             columns,
             loading,
-            replaceColumn,
+            moveColumn,
             changeColumnName,
             addTask,
-            replaceTask,
+            moveTask,
             changeTaskName,
             commentTask
         } = this.props;
@@ -44,14 +58,11 @@ class App extends React.Component {
                     {columns.map((column, indexColumn) => (
                         <Column
                             key={column.id}
-                            name={column.name}
-                            columnId={column.id}
-                            columnPosition={column.position}
-                            replaceColumn={replaceColumn}
+                            column={column}
+                            moveColumn={moveColumn}
                             changeColumnName={changeColumnName}
                             addTask={addTask}
-                            tasks={column.tasks}
-                            replaceTask={replaceTask}
+                            moveTask={moveTask}
                             changeTaskName={changeTaskName}
                             commentTask={commentTask}
                         />

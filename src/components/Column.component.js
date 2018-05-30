@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { DragSource } from 'react-dnd';
-import { Card, Button } from 'antd';
+import {DragSource} from 'react-dnd';
+import {Card, Button} from 'antd';
 
 import ColumnPlace from './ColumnPlace.component';
 import Task from './Task.component';
@@ -15,8 +15,8 @@ import '../styles/column.scss';
 const columnSource = {
     beginDrag(props) {
         return {
-            columnId: props.columnId,
-            columnPosition: props.columnPosition
+            columnId: props.column.id,
+            columnPosition: props.column.position
         };
     },
     endDrag(props, monitor) {
@@ -24,7 +24,7 @@ const columnSource = {
         const dropResult = monitor.getDropResult();
         if (dropResult) {
             if (item.columnId !== dropResult.columnId) {
-                props.replaceColumn(item.columnId, dropResult.columnPosition);
+                props.moveColumn(item.columnId, dropResult.columnPosition);
             }
         }
     },
@@ -41,26 +41,28 @@ class Column extends React.Component {
 
     static get propTypes() {
         return {
-            name: PropTypes.string.isRequired,
             isDragging: PropTypes.bool.isRequired,
             connectDragSource: PropTypes.func.isRequired,
-            columnId: PropTypes.number.isRequired,
-            columnPosition: PropTypes.number.isRequired,
-            tasks: PropTypes.array.isRequired,
-            replaceTask: PropTypes.func.isRequired,
+            moveTask: PropTypes.func.isRequired,
             changeTaskName: PropTypes.func.isRequired,
-            commentTask: PropTypes.func.isRequired
+            commentTask: PropTypes.func.isRequired,
+            column: PropTypes.shape({
+                id: PropTypes.number.isRequired,
+                name: PropTypes.string.isRequired,
+                position: PropTypes.number.isRequired,
+                tasks: PropTypes.array.isRequired,
+            })
         }
     }
 
     handleChangeName = () => {
-        data.prompt('New name of column', false, this.props.name)
-            .then(name => this.props.changeColumnName(this.props.columnId, name))
+        data.prompt('New name of column', false, this.props.column.name)
+            .then(name => this.props.changeColumnName(this.props.column.id, name))
     };
 
     handleAddTask = () => {
         data.prompt('Name of new task', false)
-            .then(name => this.props.addTask(name, this.props.columnId))
+            .then(name => this.props.addTask(name, this.props.column.id))
     };
 
     renderMenu = () => {
@@ -76,33 +78,30 @@ class Column extends React.Component {
         const {
             isDragging,
             connectDragSource,
-            name,
-            columnId,
-            columnPosition,
-            tasks,
-            replaceTask,
+            column,
+            moveTask,
             changeTaskName,
             commentTask
         } = this.props;
-
+        const {id, name, tasks, position} = column;
         return connectDragSource(
             <div style={{ opacity: isDragging ? 0.5 : 1 }} className="column">
-                <ColumnPlace columnId={columnId} columnPosition={columnPosition}/>
+                <ColumnPlace columnId={id} columnPosition={position}/>
                 <Card
                     title={name}
                     bordered={false}
                     extra={this.renderMenu()}
                 >
 
-                    {tasks.map((task, indexTask) => (
+                    {tasks.map(task => (
                         <Task
-                            key={indexTask}
+                            key={task.id}
                             name={task.name}
                             taskId={task.id}
-                            columnId={task.column_id}
+                            columnId={id}
                             comments={task.comments}
                             positionTask={task.position}
-                            replaceTask={replaceTask}
+                            moveTask={moveTask}
                             changeTaskName={changeTaskName}
                             commentTask={commentTask}
                         />
@@ -110,7 +109,7 @@ class Column extends React.Component {
                     <TaskPlace
                         empty={true}
                         taskId={false}
-                        columnId={columnId}
+                        columnId={id}
                         positionTask={0}
                     />
                     {tasks.length === 0 && <p>No tasks...</p>}

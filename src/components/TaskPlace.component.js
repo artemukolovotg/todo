@@ -1,4 +1,4 @@
-import { DropTarget } from 'react-dnd';
+import {DropTarget} from 'react-dnd';
 import React from 'react';
 import cn from 'classnames';
 

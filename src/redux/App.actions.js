@@ -4,10 +4,10 @@ export const startRequest = () => ({type: START_REQUEST});
 
 // server request
 export const SERVER_GET_COLUMNS = 'server/GET_COLUMNS';
-export const SERVER_REPLACE_COLUMN = 'server/REPLACE_COLUMN';
+export const SERVER_MOVE_COLUMN = 'server/MOVE_COLUMN';
 export const SERVER_CHANGE_COLUMN_NAME = 'server/CHANGE_COLUMN_NAME';
 export const SERVER_ADD_COLUMN = 'server/ADD_COLUMN';
-export const SERVER_REPLACE_TASK = 'server/REPLACE_TASK';
+export const SERVER_MOVE_TASK = 'server/MOVE_TASK';
 export const SERVER_CHANGE_TASK_NAME = 'server/CHANGE_TASK_NAME';
 export const SERVER_ADD_TASK = 'server/ADD_TASK';
 export const SERVER_COMMENT_TASK = 'server/COMMENT_TASK';
@@ -16,11 +16,11 @@ export const server_getData = () => ({
     type: SERVER_GET_COLUMNS
 });
 
-export const server_replaceColumn = (
+export const server_moveColumn = (
     idColumnFrom,
     positionColumnTo
 ) => ({
-    type: SERVER_REPLACE_COLUMN,
+    type: SERVER_MOVE_COLUMN,
     idColumnFrom,
     positionColumnTo
 });
@@ -36,13 +36,13 @@ export const server_addColumn = name => ({
     name
 });
 
-export const server_replaceTask = (
+export const server_moveTask = (
     taskColumnFrom,
     idTaskFrom,
     taskColumnTo,
     positionTaskTo
 ) => ({
-    type: SERVER_REPLACE_TASK,
+    type: SERVER_MOVE_TASK,
     taskColumnFrom,
     idTaskFrom,
     taskColumnTo,
@@ -55,17 +55,17 @@ export const server_changeTaskName = (id, name)=> ({
     name
 });
 
-export const server_addTask = (name, column_id) => ({
+export const server_addTask = (name, columnId) => ({
     type: SERVER_ADD_TASK,
     name,
-    column_id
+    columnId
 });
 
 
-export const server_commentTask = (task_id, text) => ({
+export const server_commentTask = (taskId, text) => ({
     type: SERVER_COMMENT_TASK,
     text,
-    task_id
+    taskId
 });
 
 // server response

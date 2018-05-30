@@ -9,6 +9,20 @@ let io = socket_io();
 
 function DB() {
     let db_client = false;
+    let mappers = {
+        task: task => {
+            let temp = Object.assign({}, task);
+            temp.columnId = temp.column_id;
+            delete temp.column_id;
+            return temp;
+        },
+        comment: comment => {
+            let temp = Object.assign({}, comment);
+            temp.taskId = temp.task_id;
+            delete temp.task_id;
+            return temp;
+        }
+    };
     let queryConstructor = {
         getColumns: function (id = false) {
             return 'SELECT ' +
@@ -17,19 +31,19 @@ function DB() {
                 (id !== false ? `WHERE c.id = ${id} ` : '') +
                 'ORDER BY position';
         },
-        getTasks: function (column_id = false, task_id = false) {
+        getTasks: function (columnId = false, taskId = false) {
             return 'SELECT ' +
                 't.id, t.name, t.position, t.column_id ' +
                 'FROM public.task t WHERE 1 = 1 ' +
-                (task_id !== false ? `AND t.id = ${task_id} ` : '') +
-                (column_id !== false ? `AND t.column_id = ${column_id} ` : '') +
+                (taskId !== false ? `AND t.id = ${taskId} ` : '') +
+                (columnId !== false ? `AND t.column_id = ${columnId} ` : '') +
                 'ORDER BY position';
         },
-        getComments: function (task_id = false) {
+        getComments: function (taskId = false) {
             return 'SELECT ' +
                 'c.id, c.text, c.task_id ' +
                 'FROM public.comment c ' +
-                (task_id !== false ? `WHERE c.task_id = ${task_id} ` : '') +
+                (taskId !== false ? `WHERE c.task_id = ${taskId} ` : '') +
                 'ORDER BY id';
         },
         changeColumnPosition: function (id, position) {
@@ -44,31 +58,32 @@ function DB() {
         addColumn: function (name) {
             return `INSERT INTO public.column (name) VALUES ('${name}') RETURNING id;`;
         },
-        changeTaskPosition: function (id, column_id, position) {
+        changeTaskPosition: function (id, columnId, position) {
             return `UPDATE public.task SET position = ${
-                position !== 0 ? position : `COALESCE((SELECT t.position+1 FROM public.task t WHERE column_id=${column_id} ORDER BY t.position DESC LIMIT 1), 1)`
-                }, column_id=${column_id} WHERE id = ${id}`;
+                position !== 0 ? position : `COALESCE((SELECT t.position+1 FROM public.task t WHERE column_id=${columnId} ORDER BY t.position DESC LIMIT 1), 1)`
+                }, column_id=${columnId} WHERE id = ${id}`;
         },
-        increaseTaskSequence: function (column_id, position) {
-            return `UPDATE public.task SET position = position + 1 WHERE column_id = ${column_id} AND position >= ${position}`;
+        increaseTaskSequence: function (columnId, position) {
+            return `UPDATE public.task SET position = position + 1 WHERE column_id = ${columnId} AND position >= ${position}`;
         },
         changeTaskName: function (id, name) {
             return `UPDATE public.task SET name = '${name}' WHERE id = ${id}`;
         },
-        addTask: function (name, column_id) {
-            return `INSERT INTO public.task (name, column_id) VALUES ('${name}', ${column_id}) RETURNING id;`;
+        addTask: function (name, columnId) {
+            return `INSERT INTO public.task (name, column_id) VALUES ('${name}', ${columnId}) RETURNING id;`;
         },
-        commentTask: function (text, task_id) {
-            return `INSERT INTO public.comment (text, task_id) VALUES ('${text}', ${task_id})`;
+        commentTask: function (text, taskId) {
+            return `INSERT INTO public.comment (text, task_id) VALUES ('${text}', ${taskId})`;
         },
     };
-    let perform = function (query) {
+    let perform = function (query, mapper = rows => rows) {
+        console.log(query);
         return new Promise((resolve, reject) => {
             db_client.query(query, (err, res) => {
                  if (err) {
                      reject(err);
                  } else {
-                     resolve(res.rows);
+                     resolve(res.rows.map(mapper));
                  }
             });
         });
@@ -77,11 +92,11 @@ function DB() {
     let queryList = {
         COMMENT_TASK: function(data) {
             return new Promise((resolve, reject) => {
-                perform(queryConstructor.commentTask(data.text, data.task_id))
+                perform(queryConstructor.commentTask(data.text, data.taskId))
                     .then(() => {
                         Promise.all([
-                            perform(queryConstructor.getTasks(false, data.task_id)),
-                            perform(queryConstructor.getComments(data.task_id)),
+                            perform(queryConstructor.getTasks(false, data.taskId), mappers.task),
+                            perform(queryConstructor.getComments(data.taskId), mappers.comment),
                         ]).then(([tasks, comments]) => {
 
                             let task = Object.assign(tasks[0], {comments});
@@ -96,9 +111,9 @@ function DB() {
         },
         ADD_TASK: function(data) {
             return new Promise((resolve, reject) => {
-                perform(queryConstructor.addTask(data.name, data.column_id))
+                perform(queryConstructor.addTask(data.name, data.columnId))
                     .then(() =>
-                        queryList.GET_COLUMNS(data.column_id)
+                        queryList.GET_COLUMNS(data.columnId)
                             .then(resolve)
                     )
                     .catch(() => reject('error to add task'))
@@ -109,8 +124,8 @@ function DB() {
                 perform(queryConstructor.changeTaskName(data.id, data.name))
                     .then(() =>
                         Promise.all([
-                            perform(queryConstructor.getTasks(false, data.id)),
-                            perform(queryConstructor.getComments(data.id)),
+                            perform(queryConstructor.getTasks(false, data.id), mappers.task),
+                            perform(queryConstructor.getComments(data.id), mappers.comment),
                         ]).then(([tasks, comments]) => {
 
                             let task = Object.assign(tasks[0], {comments});
@@ -123,7 +138,7 @@ function DB() {
                     .catch(() => reject('error to rename task'))
             });
         },
-        REPLACE_TASK: function(data) {
+        MOVE_TASK: function(data) {
             return new Promise((resolve, reject) => {
                 const performUpdate = () => {
                     perform(queryConstructor.changeTaskPosition(data.idTaskFrom, data.taskColumnTo, data.positionTaskTo))
@@ -148,7 +163,7 @@ function DB() {
                 perform(queryConstructor.addColumn(data.name))
                     .then(data => {
                         if (data.length !== 0) {
-                            queryList.GET_COLUMNS({column_id: data[0].id})
+                            queryList.GET_COLUMNS({columnId: data[0].id})
                                 .then(resolve)
                         }
                     })
@@ -159,13 +174,13 @@ function DB() {
             return new Promise((resolve, reject) => {
                 perform(queryConstructor.changeColumnName(data.id, data.name))
                     .then(() =>
-                        queryList.GET_COLUMNS({column_id: data.id})
+                        queryList.GET_COLUMNS({columnId: data.id})
                             .then(resolve)
                     )
                     .catch(() => reject('error to rename column'))
             });
         },
-        REPLACE_COLUMN: function(data) {
+        MOVE_COLUMN: function(data) {
             return new Promise((resolve, reject) => {
                 perform(queryConstructor.increaseColumnSequence(data.positionColumnTo))
                     .then(() => {
@@ -179,21 +194,21 @@ function DB() {
             });
         },
         GET_COLUMNS: function (data = false) {
-            let column_id = (data ? data.column_id : false) || false;
+            let columnId = (data ? data.columnId : false) || false;
             return new Promise((resolve, reject) => {
                 Promise.all([
-                    perform(queryConstructor.getColumns(column_id)),
-                    perform(queryConstructor.getTasks(column_id)),
-                    perform(queryConstructor.getComments()),
+                    perform(queryConstructor.getColumns(columnId)),
+                    perform(queryConstructor.getTasks(columnId), mappers.task),
+                    perform(queryConstructor.getComments(), mappers.comment),
                 ]).then(([columns, tasks, comments]) => {
                     columns = columns.map(column =>
                         Object.assign(column, {
                             tasks: tasks.filter(task =>
-                                task.column_id === column.id
+                                task.columnId === column.id
                             ).map(task =>
                                 Object.assign(task, {
                                     comments: comments.filter(comment =>
-                                        comment.task_id === task.id
+                                        comment.taskId === task.id
                                     )
                                 })
                             )
@@ -201,8 +216,8 @@ function DB() {
                     );
 
                     resolve({
-                        type: column_id === false ? 'COLUMNS' : 'COLUMN',
-                        data: column_id === false ?
+                        type: columnId === false ? 'COLUMNS' : 'COLUMN',
+                        data: columnId === false ?
                             columns :
                             {column: columns[0]}
                     });

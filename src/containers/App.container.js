@@ -1,10 +1,10 @@
-import { connect } from 'react-redux'
+import {connect} from 'react-redux'
 import App from '../App';
 import {
-    server_replaceColumn,
+    server_moveColumn,
     server_changeColumnName,
     server_addColumn,
-    server_replaceTask,
+    server_moveTask,
     server_changeTaskName,
     server_addTask,
     server_commentTask,
@@ -20,8 +20,8 @@ const mapStateToProps = state => {
 };
 
 const mapDispatchToProps = dispatch => ({
-    replaceColumn: (...parameters) => {
-        dispatch(server_replaceColumn(...parameters));
+    moveColumn: (...parameters) => {
+        dispatch(server_moveColumn(...parameters));
     },
     changeColumnName: (indexColumn, name) => {
         dispatch(server_changeColumnName(indexColumn, name));
@@ -29,16 +29,16 @@ const mapDispatchToProps = dispatch => ({
     addColumn: (name) => {
         dispatch(server_addColumn(name));
     },
-    addTask: (name, column_id) => {
-        dispatch(server_addTask(name, column_id));
+    addTask: (name, columnId) => {
+        dispatch(server_addTask(name, columnId));
     },
-    replaceTask: (
+    moveTask: (
         taskColumnFrom,
         idTaskFrom,
         taskColumnTo,
         positionTaskTo
     ) => {
-        dispatch(server_replaceTask(
+        dispatch(server_moveTask(
             taskColumnFrom,
             idTaskFrom,
             taskColumnTo,

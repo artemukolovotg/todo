@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { DropTarget } from 'react-dnd';
+import {DropTarget} from 'react-dnd';
 import cn from 'classnames';
 
 import {ItemTypes} from '../utils/constants'

@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Icon } from 'antd';
+import {Icon} from 'antd';
 import cn from 'classnames';
 
 import '../styles/loading.scss';
